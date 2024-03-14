@@ -36,42 +36,46 @@ def pegarInfo():
    
 janela = Tk()
 janela.title('Informações do Pedido')
-janela.geometry('295x195')
+janela.geometry('295x198')
 janela.resizable(False, False)
-#janela.iconbitmap(default='') # informar a imagem da janela .ico
+# janela.iconbitmap(default='') # informar a imagem da janela .ico
 
 
 label_trans = Label(janela, text = "Código da Transportadora:")
 label_trans.grid(column=0, row = 0, padx=5, pady=5)
 entrada_trans = Entry(janela,width=15, justify='center')
-entrada_trans.grid(column=1, row=0, padx=5, pady=5)
+entrada_trans.grid(column=1, row=0, padx=10, pady=5)
 
 label_redesp = Label(janela, text = "Código do Redespacho:", justify='right')
 label_redesp.grid(column=0, row=1, padx=5, pady=5)
 entrada_redespacho = Entry(janela,width=15, justify='center')
-entrada_redespacho.grid(column=1, row=1, padx=5, pady=5)
+entrada_redespacho.grid(column=1, row=1, padx=10, pady=5)
 
 label_qtd = Label(janela, text = "Quantidade de Volumes:", justify='right')
 label_qtd.grid(column=0, row=2, padx=5, pady=5)
 entrada_volume = Entry(janela,width=15, justify='center')
-entrada_volume.grid(column=1, row=2, padx=5, pady=5)
+entrada_volume.grid(column=1, row=2, padx=10, pady=5)
 
 label_esp = Label(janela, text = "Tipo de Volume:", justify='right')
 label_esp.grid(column=0, row=3, padx=5, pady=5)
 cb_especie=ttk.Combobox(janela,values=listVolumes, width=12, state='readonly')
-cb_especie.grid(column=1, row=3, padx=5, pady=5)
+cb_especie.grid(column=1, row=3, padx=10, pady=5)
 
 label_icms = Label(janela, text = "Tem ICMS de 4%:", justify='right')
 label_icms.grid(column=0, row=4, padx=5, pady=5)
 cb_icms=ttk.Combobox(janela,values=listIcms, width=12, state='readonly')
 cb_icms.set(listIcms[1])
-cb_icms.grid(column=1, row=4, padx=5, pady=5)
+cb_icms.grid(column=1, row=4, padx=10, pady=5)
 
     
-botao = Button(janela, text="Ok",command=pegarInfo, width=11)
-botao.grid(column=1, row=5, padx=5, pady=3)
+btn_iniciar = Button(janela, text="Iniciar",command=pegarInfo, width=12)
+btn_iniciar.grid(column=0, row=5, padx=5, pady=5)
+
+btn_sair = Button(janela, text="Sair",command=quit, width=12)
+btn_sair.grid(column=1, row=5, padx=0, pady=5)
 
 janela.mainloop()
+
 
 aviso = messagebox.showinfo('Atenção', 'Favor não tocar no mouse e teclado durante o processo!')
 
@@ -88,13 +92,13 @@ try:
     pyautogui.click(pyautogui.locateCenterOnScreen('nao.png', minSearchTime=10),duration=0.5) # Não fechar NF
     sleep(0.5)
     pyautogui.click(pyautogui.locateCenterOnScreen('nf.png', minSearchTime=2),duration=0.5) # Abrir NF
-    sleep(2)
+    sleep(1.5)
 
     # Localizar tipo de produtos para selecionar frase
     pyautogui.moveTo(1125,379, duration=0.5)
     try:
         try:
-            pvc = pyautogui.locateCenterOnScreen('pvc.png', minSearchTime=1.5)
+            pvc = pyautogui.locateCenterOnScreen('pvc.png', minSearchTime=1)
             pyautogui.moveTo(pvc, duration=0.4)
             frase_pvc = '71'
         except:
@@ -116,15 +120,15 @@ try:
         messagebox.showinfo('Aviso','Erro')
         quit()
 
-    if frase_espuma != '0' or frase_pvc != '0' or frase_icms != '0':
+    # Monta as frases dependendo dos itens na nota
+    if frase_espuma != '0' or frase_pvc != '0':
         frases = [frase_pvc, frase_espuma, frase_icms]
+        frases.sort(reverse=True)
     else:
         frases = ['33',frase_icms]
-
-    frases.sort(reverse=True)
     
-    # Finalizar NF
-    sleep(0.5)
+    
+    # Tela da NF
     pyautogui.click(64,144,duration=0.5) # Diversos
     sleep(2)
 
@@ -160,21 +164,17 @@ try:
         pyautogui.doubleClick(519,340,duration=1)
         pyautogui.write('F')
         pyautogui.keyDown('enter')
-        pyautogui.click(998,234,duration=0.5)
+        pyautogui.click(998,234,duration=1)
 
     pyautogui.click(1246,61,duration=0.5) # Fechar
     sleep(0.5)
-
-    #pyautogui.moveTo(642,413)
-    sleep(1)
-
+    
     fechar = True
     sim = True
     continuar = True
     certificado = True
-    cont = 0
-
-    while fechar:
+    
+    while fechar: # Clica em sim, continuar ou imprimi certificado enquanto tiver
         try:
             clica_sim = pyautogui.locateCenterOnScreen('sim.png', minSearchTime=2)
             pyautogui.click(clica_sim.x, clica_sim.y, duration=0.3) # Sim
@@ -182,30 +182,31 @@ try:
             sim = True
         except:
             sim = False
-
+        
         try:
-            clica_imprimir = pyautogui.locateCenterOnScreen('imprimir.png', minSearchTime=1)
-            pyautogui.click(clica_imprimir.x, clica_imprimir.y, duration=0.5)
-            clica_ok = pyautogui.locateCenterOnScreen('ok.png', minSearchTime=1)
-            pyautogui.click(clica_ok.x, clica_ok.y, duration=0.3)
-            clica_sair = pyautogui.locateCenterOnScreen('sair.png', minSearchTime=1.5)
-            pyautogui.click(clica_sair.x, clica_sair.y, duration=1)
-            certificado = True
-        except:
-            certificado = False
-
-        try:
-            if cont < 1:
+            if continuar == True:
                 clica_continuar = pyautogui.locateCenterOnScreen('continuar.png', minSearchTime=1)
                 pyautogui.click(clica_continuar.x, clica_continuar.y, duration=0.3) # Continuar
                 pyautogui.moveTo(642,500,duration=0.2)
                 sleep(2)
                 continuar = True
-                cont += 1
             else:
                 continuar = False
         except:
             continuar = False
+
+        try:
+            if certificado == True:
+                clica_imprimir = pyautogui.locateCenterOnScreen('imprimir.png', minSearchTime=2)
+                pyautogui.click(clica_imprimir.x, clica_imprimir.y, duration=0.5)
+                clica_ok = pyautogui.locateCenterOnScreen('ok.png', minSearchTime=1)
+                pyautogui.click(clica_ok.x, clica_ok.y, duration=0.3)
+                clica_sair = pyautogui.locateCenterOnScreen('sair.png', minSearchTime=1.5)
+                pyautogui.click(clica_sair.x, clica_sair.y, duration=1)
+                certificado = True
+        except:
+            certificado = False
+
 
         if sim == True or continuar == True or certificado == True:
             fechar = True
@@ -214,7 +215,7 @@ try:
 
 
     pyautogui.click(1313,40,duration=0.5) # Ok
-    sleep(1)
+    sleep(2)
 
     messagebox.showinfo('Aviso','Finalizado com Sucesso!')
 except:
