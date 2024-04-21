@@ -8,7 +8,7 @@ from tkinter import ttk
 # Função que inicia a aplicação chamada pelo botão iniciar
 def iniciar():
 
-    global transportadora, redespacho, volume, especie, itens
+    global transportadora, redespacho, volume, especie, itens, obs_nota
     
     # Adiciona os valores informados no campo da janela em uma variável
     transportadora = entrada_trans.get()
@@ -16,6 +16,8 @@ def iniciar():
     volume = entrada_volume.get()
     especie = cb_especie.get()
     itens = entrada_volume_item.get()
+    obs_nota = cb_obs.get()
+
 
     # Compara o tipo de volume escolhido pelo usuário e altera a variável para o código do tipo
     match especie:
@@ -37,7 +39,7 @@ def iniciar():
     janela.destroy()
     
     messagebox.showinfo('Atenção', 'Favor não tocar no mouse e teclado durante o processo! \
-    Caso precise parar arraste o mouse para o campo superior esquerdo até encerrar o processo.')
+    Caso precise parar arraste o mouse para o canto superior esquerdo até encerrar o processo.')
 
     
     # Preparação para NF
@@ -54,29 +56,58 @@ def iniciar():
         pyautogui.click(pyautogui.locateCenterOnScreen('img/sim.png', minSearchTime=5),duration=0.2)
         sleep(0.5)
 
-        # Movimenta o mouse para baixo para sair de cima do botão
-        pyautogui.moveTo(642,500, duration=0.2)
 
-        # Opção de não fechar a nota pois falta informar transportadora, volumes, frases e etc.
-        pyautogui.click(pyautogui.locateCenterOnScreen('img/nao.png', minSearchTime=10),duration=0.2)
-        sleep(0.5)
-
+        # Bloco para preencher a tela de rateio, quando exigir
+        rep_rateio = True
+        tem_rateio = False
+        try:
+            pyautogui.moveTo(642,500, duration=0.2)
+            rateio = pyautogui.locateCenterOnScreen('img/rateio.png', minSearchTime=1)
+            tem_rateio = True
+        except:
+            tem_rateio = False
+            pass
+        if tem_rateio: 
+            while rep_rateio:
+                try:
+                    pyautogui.moveTo(642,500, duration=0.2)
+                    rateio = pyautogui.locateCenterOnScreen('img/rateio.png', minSearchTime=1)
+                    tem_rateio = True
+                except:
+                    tem_rateio = False
+                    pass
+                if tem_rateio:
+                    pyautogui.click(rateio[0], rateio[1]+28, duration=0.2)
+                    pyautogui.write('119')
+                    pyautogui.press('up')
+                    ccusto = pyautogui.locateCenterOnScreen('img/ccusto.png', minSearchTime=1)
+                    pyautogui.doubleClick(ccusto[0],ccusto[1]+25, duration=0.2)
+                    pyautogui.write('42')
+                    sleep(0.4)
+                    pyautogui.hotkey('alt','o')
+                    sleep(1)
+                else:
+                    pyautogui.moveTo(642,500, duration=0.2)
+                    pyautogui.click(pyautogui.locateCenterOnScreen('img/nao_rateio.png', minSearchTime=2),duration=0.2)
+                    rep_rateio = False
+        else:
+            pyautogui.moveTo(642,500, duration=0.2)
+            pyautogui.click(pyautogui.locateCenterOnScreen('img/nao.png', minSearchTime=10),duration=0.2)
+        
         # Abrir a tela da nota para preencher a informações
         pyautogui.click(pyautogui.locateCenterOnScreen('img/nf.png', minSearchTime=2),duration=0.2)
         sleep(2)
 
         # Procura na coluna de descrição do produto por pvc, caso encontre a frase é 71 senão será vazio
         try:
-            pvc = pyautogui.locateCenterOnScreen('img/pvc.png', minSearchTime=1)
-            pyautogui.moveTo(pvc, duration=0.2)
+            pyautogui.moveTo(pyautogui.locateCenterOnScreen('img/pvc.png', minSearchTime=1), duration=0.2)
             frase_pvc = '71'
         except:
             frase_pvc = ''
 
         # Procura na coluna de descrição do produto por espuma, caso encontre a frase é 75 senão será vazio
         try:
-            espuma = pyautogui.locateCenterOnScreen('img/espuma.png')
-            pyautogui.moveTo(espuma, duration=0.2)
+            pyautogui.moveTo(pyautogui.locateCenterOnScreen('img/espuma.png'), duration=0.2)
             frase_espuma = '70'
         except:
             frase_espuma = ''
@@ -84,8 +115,7 @@ def iniciar():
         # Procura se algum produto na coluna de percentual de icms tem o icms com 4%, caso tenha a frase é a 75 senão é 0
         try:
             perc_icms = pyautogui.locateOnScreen('img/perc_icms.png')
-            area = pyautogui.locateOnScreen('img/icms.png', region=(perc_icms[0],perc_icms[1],perc_icms[0]+40,perc_icms[1]+250))
-            pyautogui.moveTo(area, duration=0.2)
+            pyautogui.moveTo(pyautogui.locateOnScreen('img/icms.png', region=(perc_icms[0],perc_icms[1],perc_icms[0]+40,perc_icms[1]+250)), duration=0.2)
             frase_icms = '75'
         except:
             frase_icms = '0'
@@ -160,11 +190,23 @@ def iniciar():
             pyautogui.write(str(frase))
             pyautogui.press('enter', presses=2, interval=0.1)
         
-        # Confirmação de preenchimento
-        messagebox.showinfo('Atenção', 'Confira os dados!')
+        # Apaga tudo que contém no campo observação se estiver selecionado na tela inicial
+        if obs_nota == 'Sim':
+            loc_obs = pyautogui.locateCenterOnScreen('img/obs_nota.png', minSearchTime=1, region=(0,400,402,715))
+            pyautogui.click(loc_obs[0]+62, loc_obs[1], duration=0.2)
+            pyautogui.hotkey('ctrl','a')
+            pyautogui.press('del')
+            sleep(0.3)
+        else:
+            messagebox.showinfo('Atenção', 'Confira os dados!')
 
         # Processar
         pyautogui.click(pyautogui.locateCenterOnScreen('img/processar.png', minSearchTime=2),duration=0.2)
+
+        try:
+            pyautogui.click(pyautogui.locateCenterOnScreen('img/nao.png', minSearchTime=2),duration=0.2)
+        except:
+            pass
 
         # Adiciona o tipo de frete do redespacho caso tenha transportadora informada
         if tem_redespacho: 
@@ -176,74 +218,72 @@ def iniciar():
         # Fechar NF
         pyautogui.click(pyautogui.locateCenterOnScreen('img/fechar.png', minSearchTime=2),duration=0.2) 
         sleep(0.5)
+
+        # Sim
+        try:
+            pyautogui.click(pyautogui.locateOnScreen('img/sim.png', minSearchTime=2, region=(524,333,842,429)), duration=0.2)
+            pyautogui.moveTo(642,500,duration=0.1)
+            sleep(2)
+        except:
+            pass
+
+        try:
+            pyautogui.click(pyautogui.locateOnScreen('img/continuar.png', minSearchTime=2, region=(524,333,842,429)), duration=0.2)
+            pyautogui.moveTo(642,500,duration=0.1)
+            sleep(3)
+        except:
+            pass
         
         # Variáveis condicionais do looping
         fechar = True
         sim = True
-        continuar = True
         certificado = True
         
         # Looping para clicar em sim, continuar ou imprimir certificado enquanto for verdadeiro
         while fechar: 
-            pyautogui.moveTo(642,500,duration=0.1)
-            
-            # Sim
+            while certificado:
+                try:
+                    sleep(2)
+                    pyautogui.click(pyautogui.locateCenterOnScreen('img/imprimir.png', minSearchTime=1, region=(418,0,656,63)), duration=0.2)
+                    pyautogui.click(pyautogui.locateCenterOnScreen('img/ok-cert.png', minSearchTime=2, region=(807,188,1037,352)), duration=0.3) # posição do ok 935,252
+                    pyautogui.click(pyautogui.locateCenterOnScreen('img/sair.png', minSearchTime=2, region=(418,0,656,63)), duration=0.2)
+                    sleep(1.5)
+                except:
+                    certificado = False
+                                
             try:
-                clica_sim = pyautogui.locateOnScreen('img/sim.png', minSearchTime=3, region=(524,333,842,429))
-                pyautogui.click(clica_sim, duration=0.2)
-                sim = True
+                pyautogui.click(pyautogui.locateOnScreen('img/sim.png', minSearchTime=2, region=(524,333,842,429)), duration=0.2)
+                pyautogui.moveTo(642,500,duration=0.1)
             except:
                 sim = False
-            
-            pyautogui.moveTo(642,500,duration=0.1)
-            
-            # Continuar
-            try:
-                if continuar == True:
-                    clica_continuar = pyautogui.locateOnScreen('img/continuar.png', minSearchTime=0.6, region=(524,333,842,429))
-                    pyautogui.click(clica_continuar, duration=0.2) 
-                    sleep(1)
-            except:
-                continuar = False
 
-            # Imprimir certificado caso tenha         
-            try:
-                clica_imprimir = pyautogui.locateOnScreen('img/imprimir.png', minSearchTime=2, region=(418,0,656,63))
-                pyautogui.click(clica_imprimir, duration=0.2)
-                certificado=True
-            except:
-                certificado = False
-            if certificado==True:
-                clica_ok = pyautogui.locateOnScreen('img/ok-cert.png', minSearchTime=1, region=(807,188,1037,352))
-                pyautogui.click(clica_ok, duration=0.3) # posição do ok 935,252
-                clica_sair = pyautogui.locateOnScreen('img/sair.png', minSearchTime=1.5, region=(418,0,656,63))
-                pyautogui.click(clica_sair, duration=0.2)
             
             # Verifica se continua ou sai do looping
-            if sim == False and continuar == False and certificado == False:
+            if sim == False and certificado == False:
                 fechar = False
 
         # clica no Ok para continuar
-        clica_ok = pyautogui.locateOnScreen('img/ok-esp.png', minSearchTime=0.3, region=(1193, 0, 1361, 271))
-        pyautogui.click(clica_ok, duration=0.2)
+        pyautogui.click(pyautogui.locateOnScreen('img/ok-esp.png', minSearchTime=0.3, region=(1193, 0, 1361, 271)), duration=0.2)
         sleep(2)
 
         # Confirmação para fechar a nota
-        fechar_nota = messagebox.askyesno('Confirmação','Posso fechar a nota?')
+        fechar_nota = messagebox.askyesno('Confirmação','Confirma o fechamento?')
 
         # Sair do espelho da nota
         clica_sair = pyautogui.locateOnScreen('img/sair.png', minSearchTime=1.5, region=(418,0,656,63))
         pyautogui.click(clica_sair, duration=0.2)
                 
         if fechar_nota == True:
-            clica_sim = pyautogui.locateOnScreen('img/sim.png', minSearchTime=2, region=(505,301,877,449))
-            pyautogui.click(clica_sim, duration=0.3)
+            pyautogui.click(pyautogui.locateOnScreen('img/sim.png', minSearchTime=2, region=(505,301,877,449)), duration=0.3)
             pyautogui.moveTo(642,500,duration=0.1)
-            clica_ok = pyautogui.locateOnScreen('img/ok.png', minSearchTime=2, region=(505,301,877,449))
-            pyautogui.click(clica_ok, duration=0.3)
-            pyautogui.moveTo(642,500,duration=0.1)
-            clica_nao = pyautogui.locateOnScreen('img/nao.png', minSearchTime=2, region=(505,301,877,449))
-            pyautogui.click(clica_nao, duration=0.3)
+            try:
+                clica_ok = pyautogui.locateOnScreen('img/ok.png', minSearchTime=2, region=(505,301,877,449))
+                pyautogui.click(clica_ok, duration=0.3)
+                pyautogui.moveTo(642,500,duration=0.1)
+                clica_nao = pyautogui.locateOnScreen('img/nao.png', minSearchTime=2, region=(505,301,877,449))
+                pyautogui.click(clica_nao, duration=0.3)
+            except:
+                pass
         else:
             clica_nao = pyautogui.locateOnScreen('img/nao.png', minSearchTime=2, region=(505,301,877,449))
             pyautogui.click(clica_nao, duration=0.3)
@@ -268,35 +308,40 @@ def limpar():
     entrada_redespacho.delete(0, END)
     entrada_volume.delete(0, END)
     cb_especie.set('')
+    cb_obs.set(list_obs[0])
     entrada_volume_item.delete(0, END)
+    
 
 # Função para criar a janela
 def abrirJanela():
 
     # Variáveis globais dos campos e tela
-    global entrada_trans, entrada_redespacho, entrada_volume, cb_especie, entrada_volume_item, janela
+    global entrada_trans, entrada_redespacho, entrada_volume, cb_especie 
+    global entrada_volume_item,cb_obs, janela, list_obs
 
     listVolumes = ['Volume','Pallet','Container','Unidade','Tambor',
                'Balde','Granel']
+    
+    list_obs = ['Sim', 'Não']
 
     janela = Tk()
     janela.title('Informações do Pedido')
     janela.resizable(False, False)
-    janela.iconbitmap(default='') # Adicionar a imagem de icone .ICO
+    janela.iconbitmap(default='') # Colocar icone da aplicação em arquivo .ICO
     janela.focus()
 
     # Dimensões e posição da tela
     largura = 345
-    altura = 180
+    altura = 210
     largura_tela = janela.winfo_screenwidth()
     altura_tela =  janela.winfo_screenheight()
-    posix = largura_tela/2
-    posiy = altura_tela/2 - altura
+    posix = largura_tela/2 - 41
+    posiy = altura_tela/2 - (altura - 38)
     janela.geometry("%dx%d+%d+%d" % (largura,altura,posix,posiy))
 
     # Label e campo de preenchimento da transportadora
     label_trans = Label(janela, text = "    Código da Transportadora:")
-    label_trans.grid(column=0, row = 0, padx=0, pady=5, sticky='e')
+    label_trans.grid(column=0, row=0, pady=5, sticky='e')
     entrada_trans = Entry(janela,width=12, justify='center')
     entrada_trans.grid(column=1, row=0, padx=5, pady=5, sticky='e')
 
@@ -321,20 +366,27 @@ def abrirJanela():
     # Label e campo de preenchimento da quantidade de volumes por item separados somente por vírgula
     label_qtd_item = Label(janela, text = "Volumes por item:")
     label_qtd_item.grid(column=0, row=4, pady=5, sticky='e')
-    entrada_volume_item = Entry(janela,width=26, justify='left')
-    entrada_volume_item.grid(column=1, row=4, padx=5, pady=5, columnspan='3')
+    entrada_volume_item = Entry(janela, width=26, justify='left')
+    entrada_volume_item.grid(column=1, row=4, padx=5, pady=5, columnspan='3', sticky='e')
+    
+    # Label e campo de preenchimento para apagar as observações
+    label_obs = Label(janela, text = "Apagar obs. da nota:")
+    label_obs.grid(column=0, row=5, pady=5, sticky='e')
+    cb_obs=ttk.Combobox(janela,values=list_obs, width=9, state='readonly')
+    cb_obs.grid(column=1, row=5, padx=5, pady=5, sticky='e')
+    cb_obs.set(list_obs[0])
 
     # Botão que inicia a aplicação    
     btn_iniciar = Button(janela, text="Iniciar",command=iniciar, width=10)
-    btn_iniciar.grid(column=3, row=0, padx=1, pady=5)
+    btn_iniciar.grid(column=3, row=0, padx=1, pady=0, rowspan=2, sticky='e')
 
     # Botão de limpar os campos
     btn_limpar = Button(janela, text="Limpar",command=limpar, width=10)
-    btn_limpar.grid(column=3, row=1, padx=1, pady=5)
+    btn_limpar.grid(column=3, row=2, padx=1, pady=5, sticky='se')
 
     # Botão de sair da aplicação
     btn_sair = Button(janela, text="Sair",command=janela.destroy, width=10)
-    btn_sair.grid(column=3, row=2, padx=1, pady=5)
+    btn_sair.grid(column=3, row=3, padx=1, pady=5, sticky='se')
 
     entrada_trans.focus()
     janela.mainloop()
